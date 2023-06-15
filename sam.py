@@ -1,3 +1,21 @@
+#!/usr/bin/env python3
+
+"""
+Script Name: sam.py
+Author: Stefan Herdy
+Date: 15.06.2023
+Description: 
+This is a code implementation of Facebooks "Segment Anything Model"
+A sample script how to utilize the Segment Anything Model to automatically segment microscopy images of spores
+
+Usage: 
+-  First, download the desired Segment Anything Models from the original GitHub page:
+   https://github.com/facebookresearch/segment-anything
+-  Copy the models to your model folder
+-  Set your data path, your destination path and your model path and run the script
+"""
+
+
 from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
 import cv2
 from matplotlib import pyplot as plt
@@ -9,36 +27,21 @@ import skimage.measure
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
-def show_anns(anns):
-    if len(anns) == 0:
-        return
-    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
-    ax = plt.gca()
-    ax.set_autoscale_on(False)
+# Data path
+root_folder = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
+# Path to store the segmented images
+destination_folder = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected"
 
-    img = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 4))
-    img[:,:,3] = 0
-    for ann in sorted_anns:
-        m = ann['segmentation']
-        color_mask = np.concatenate([np.random.random(3), [0.35]])
-        img[m] = color_mask
-    ax.imshow(img)
+# Model path
+ckpt_vit_b = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_b_01ec64.pth"
+ckpt_vit_h = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_h_4b8939.pth"
 
-start_time = datetime.datetime.now()
-# img_path = "C:\\Users\\faulhamm\\Documents\\270223_TF_C_W_DJI_0389_crop.jpg"
-img_path = "C:/Users/stefa/Desktop/riccia_gan/riccia_imgs/Riccia bifurca/ABry_201_Riccia_bifurca_Spore_04.jpg"
-
-root_folder = "C:/Users/stefa/Desktop/riccia_gan/riccia_imgs/"
-destination_folder = "C:/Users/stefa/Desktop/riccia_gan/riccia_imgs_selected"
-
-ckpt_vit_b = "C:/Users/stefa/Desktop/riccia_gan/sam_models/sam_vit_b_01ec64.pth"
-ckpt_vit_h = "C:/Users/stefa/Desktop/riccia_gan/sam_models/sam_vit_h_4b8939.pth"
-
-
+# Init model
 sam = sam_model_registry["vit_b"](checkpoint=ckpt_vit_b)
 predictor = SamPredictor(sam)
 mask_generator = SamAutomaticMaskGenerator(sam)
 
+# Iterate through folder
 for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
     if os.path.isdir(subdir_path) and "Riccia" in subdir:
@@ -50,11 +53,11 @@ for subdir in os.listdir(root_folder):
                 os.makedirs(destination_folder + '/' + subdir)
             #image.save(destination_folder + '/' + subdir + '/'  + image_name)
 
-
+            # Generate the segmentation masks
             masks = mask_generator.generate(image)
 
             for i in range(len(masks)):
-                image_new_false = image.copy()
+                image_new = image.copy()
                 bool_mask = masks[i]['segmentation']
                 #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
                 #object_features = skimage.measure.regionprops(labeled_image)
@@ -65,39 +68,17 @@ for subdir in os.listdir(root_folder):
                 #    if objf["area"] == max(object_areas):
                 #        labeled_image[labeled_image == objf["label"]] = True
 
-                image_new_false[bool_mask == False] = [255,255,255]
-                image_new_false = cv2.cvtColor(image_new_false, cv2.COLOR_RGB2BGR)
-                if bool_mask[10,10] == False:
-                    cv2.imwrite(destination_folder + '/' + subdir + '/'  + image_name + str(i) + 'true.png', image_new_false)
-                '''
-                image_new_true = image.copy()
-                bool_mask = masks[i]['segmentation']
-                labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
-                object_features = skimage.measure.regionprops(labeled_image)
-                object_areas = [objf["area"] for objf in object_features]
-                for object_id, objf in enumerate(object_features, start=1):
-                    if objf["area"] < max(object_areas):
-                        labeled_image[labeled_image == objf["label"]] = True
-                    if objf["area"] == max(object_areas):
-                        labeled_image[labeled_image == objf["label"]] = False
-                
-                image_new_true[bool_mask == True] = [255,255,255]
-                image_new_true = cv2.cvtColor(image_new_true, cv2.COLOR_RGB2BGR)
-                if bool_mask[10,10] == True:
-                    cv2.imwrite(destination_folder + '/' + subdir + '/'  + image_name + str(i) + 'true.png', image_new_true)
-                '''
-end_time = datetime.datetime.now()
+                # White background
+                image_new[bool_mask == False] = [255,255,255]
+                image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
 
-elapsed = end_time - start_time
-
-plt.figure(figsize=(20,20))
-plt.title("Time Elapsed: {0}".format(elapsed))
-plt.imshow(image)
-show_anns(masks)
-plt.axis('off')
-plt.show()
-
-
-
-# predictor.set_image(image)
-# masks, _, _ = predictor.predict("Tree")
+                area = masks[i]['area']
+                area_thresh = image.shape[0]/10*image.shape[1]/10
+                # Save image if area is bigger than a specified threshold 
+                if area > area_thresh:
+                    # We assume, that there are no spores etc. at the corners of the images.
+                    # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
+                    # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
+                    if bool_mask[10,10] == False:
+                        cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + str(i) + '.png', image_new)
+                    
