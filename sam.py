@@ -25,7 +25,6 @@ import os
 import skimage
 import skimage.measure
 
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # Data path
 root_folder = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
