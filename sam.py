@@ -76,12 +76,41 @@ for subdir in os.listdir(root_folder):
                     image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
 
                     area = masks[i]['area']
-                    area_thresh = image.shape[0]/10*image.shape[1]/10
+                    area_thresh = image.shape[0]/15*image.shape[1]/15
                     # Save image if area is bigger than a specified threshold 
                     if area > area_thresh:
                         # We assume, that there are no spores etc. at the corners of the images.
                         # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
                         # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
                         if bool_mask[10,10] == False:
-                            cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(0) + '.png', image_new)
-                        
+                            cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(i) + '.png', image_new)
+            # Sometimes the models label everything but the object of interest. 
+            # So if still no mask is detected, iteration is done over the "negative" masks.
+            ex = glob.glob(new_name)
+            if len(ex) == 0:
+                for i in range(len(masks)):
+                    image_new = image.copy()
+                    bool_mask = masks[i]['segmentation']
+                    #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
+                    #object_features = skimage.measure.regionprops(labeled_image)
+                    #object_areas = [objf["area"] for objf in object_features]
+                    #for object_id, objf in enumerate(object_features, start=1):
+                    #    if objf["area"] < max(object_areas):
+                    #        labeled_image[labeled_image == objf["label"]] = False
+                    #    if objf["area"] == max(object_areas):
+                    #        labeled_image[labeled_image == objf["label"]] = True
+
+                    # White background
+                    image_new[bool_mask == True] = [255,255,255]
+                    image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
+
+                    area = image.shape[0]*image.shape[1] - masks[i]['area']
+                    area_thresh = image.shape[0]/15*image.shape[1]/15
+                    # Save image if area is bigger than a specified threshold 
+                    if area > area_thresh:
+                        # We assume, that there are no spores etc. at the corners of the images.
+                        # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
+                        # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
+                        if bool_mask[10,10] == False:
+                            cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(i) + '.png', image_new)
+
