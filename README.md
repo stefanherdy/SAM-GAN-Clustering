@@ -26,3 +26,4 @@ $ git clone https://github.com/stefanherdy/use-segment-anything-model-to-autoseg
 # License
 
 This project is licensed under the MIT License.
+:copyright: 2023 Stefan Herdy
