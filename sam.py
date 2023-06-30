@@ -24,16 +24,17 @@ import datetime
 import os
 import skimage
 import skimage.measure
+import glob
 
 
 # Data path
-root_folder = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
+root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
 # Path to store the segmented images
-destination_folder = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected"
+destination_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected"
 
 # Model path
-ckpt_vit_b = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_b_01ec64.pth"
-ckpt_vit_h = "C:/Users/stefa/Desktop/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_h_4b8939.pth"
+ckpt_vit_b = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_b_01ec64.pth"
+ckpt_vit_h = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/sam_models/sam_vit_h_4b8939.pth"
 
 # Init model
 sam = sam_model_registry["vit_b"](checkpoint=ckpt_vit_b)
@@ -51,33 +52,36 @@ for subdir in os.listdir(root_folder):
             if not os.path.isdir(destination_folder + '/' + subdir):
                 os.makedirs(destination_folder + '/' + subdir)
             #image.save(destination_folder + '/' + subdir + '/'  + image_name)
+            new_name = destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + '*' + '.png'
+            
+            ex = glob.glob(new_name)
+            if len(ex) == 0:
+                # Generate the segmentation masks
+                masks = mask_generator.generate(image)
 
-            # Generate the segmentation masks
-            masks = mask_generator.generate(image)
+                for i in range(len(masks)):
+                    image_new = image.copy()
+                    bool_mask = masks[i]['segmentation']
+                    #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
+                    #object_features = skimage.measure.regionprops(labeled_image)
+                    #object_areas = [objf["area"] for objf in object_features]
+                    #for object_id, objf in enumerate(object_features, start=1):
+                    #    if objf["area"] < max(object_areas):
+                    #        labeled_image[labeled_image == objf["label"]] = False
+                    #    if objf["area"] == max(object_areas):
+                    #        labeled_image[labeled_image == objf["label"]] = True
 
-            for i in range(len(masks)):
-                image_new = image.copy()
-                bool_mask = masks[i]['segmentation']
-                #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
-                #object_features = skimage.measure.regionprops(labeled_image)
-                #object_areas = [objf["area"] for objf in object_features]
-                #for object_id, objf in enumerate(object_features, start=1):
-                #    if objf["area"] < max(object_areas):
-                #        labeled_image[labeled_image == objf["label"]] = False
-                #    if objf["area"] == max(object_areas):
-                #        labeled_image[labeled_image == objf["label"]] = True
+                    # White background
+                    image_new[bool_mask == False] = [255,255,255]
+                    image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
 
-                # White background
-                image_new[bool_mask == False] = [255,255,255]
-                image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
-
-                area = masks[i]['area']
-                area_thresh = image.shape[0]/10*image.shape[1]/10
-                # Save image if area is bigger than a specified threshold 
-                if area > area_thresh:
-                    # We assume, that there are no spores etc. at the corners of the images.
-                    # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
-                    # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
-                    if bool_mask[10,10] == False:
-                        cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + str(i) + '.png', image_new)
-                    
+                    area = masks[i]['area']
+                    area_thresh = image.shape[0]/10*image.shape[1]/10
+                    # Save image if area is bigger than a specified threshold 
+                    if area > area_thresh:
+                        # We assume, that there are no spores etc. at the corners of the images.
+                        # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
+                        # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
+                        if bool_mask[10,10] == False:
+                            cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(0) + '.png', image_new)
+                        
