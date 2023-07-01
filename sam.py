@@ -93,9 +93,8 @@ for subdir in os.listdir(root_folder):
                 for i in range(len(masks)):
                     mean_val = cv2.mean(image_new, masks[i]['segmentation'].astype(np.uint8))
                     mean_val = np.mean(mean_val[0:2])
-                    if mean_val > 200:
-                        if mean_val < 40:
-                            remaining_mask = remaining_mask + masks[i]['segmentation']
+                    if mean_val > 200 or mean_val < 40:
+                        remaining_mask = remaining_mask + masks[i]['segmentation']
                 #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
                 #object_features = skimage.measure.regionprops(labeled_image)
                 #object_areas = [objf["area"] for objf in object_features]
@@ -119,5 +118,5 @@ for subdir in os.listdir(root_folder):
                     # If the mask is at the corner of the images we know that the mask is the background mask and do not save it.
                     # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
                     if remaining_mask[10,10] == True:
-                        cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(i) + '.png', image_new)
+                        cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_rem' + str(i) + '.png', image_new)
 
