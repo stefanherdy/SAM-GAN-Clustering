@@ -93,16 +93,16 @@ for subdir in os.listdir(root_folder):
                 for i in range(len(masks)):
                     mean_val = cv2.mean(image_new, masks[i]['segmentation'].astype(np.uint8))
                     mean_val = np.mean(mean_val[0:2])
-                    if mean_val > 200 or mean_val < 40:
+                    if mean_val > 200: # or mean_val < 40:
                         remaining_mask = remaining_mask + masks[i]['segmentation']
-                #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
-                #object_features = skimage.measure.regionprops(labeled_image)
-                #object_areas = [objf["area"] for objf in object_features]
-                #for object_id, objf in enumerate(object_features, start=1):
-                #    if objf["area"] < max(object_areas):
-                #        labeled_image[labeled_image == objf["label"]] = False
-                #    if objf["area"] == max(object_areas):
-                #        labeled_image[labeled_image == objf["label"]] = True
+                # labeled_image, count = skimage.measure.label(remaining_mask, return_num=True)
+                # object_features = skimage.measure.regionprops(labeled_image)
+                # object_areas = [objf["area"] for objf in object_features]
+                # for object_id, objf in enumerate(object_features, start=1):
+                #     if objf["area"] < max(object_areas):
+                #         labeled_image[labeled_image == objf["label"]] = False
+                #     if objf["area"] == max(object_areas):
+                #         labeled_image[labeled_image == objf["label"]] = True
 
                 # White background
                 image_new[remaining_mask == True] = [255,255,255]
