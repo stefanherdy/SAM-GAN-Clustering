@@ -91,7 +91,11 @@ for subdir in os.listdir(root_folder):
                 image_new = image.copy()
                 remaining_mask = np.full((image.shape[0], image.shape[1]), False)
                 for i in range(len(masks)):
-                    remaining_mask = remaining_mask + masks[i]['segmentation']
+                    mean_val = cv2.mean(image_new, masks[i]['segmentation'].astype(np.uint8))
+                    mean_val = np.mean(mean_val[0:2])
+                    if mean_val > 200:
+                        if mean_val < 40:
+                            remaining_mask = remaining_mask + masks[i]['segmentation']
                 #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
                 #object_features = skimage.measure.regionprops(labeled_image)
                 #object_areas = [objf["area"] for objf in object_features]
