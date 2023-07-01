@@ -108,8 +108,8 @@ for subdir in os.listdir(root_folder):
                 image_new[remaining_mask == True] = [255,255,255]
                 image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
                 area_all = 0
-                for i in range(len(masks)):
-                    area_all = area_all + masks[i]['area']
+                for j in range(len(masks)):
+                    area_all = area_all + masks[j]['area']
                 area = image.shape[0]*image.shape[1] - area_all
                 area_thresh = image.shape[0]/15*image.shape[1]/15
                 # Save image if area is bigger than a specified threshold 
