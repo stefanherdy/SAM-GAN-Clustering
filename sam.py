@@ -41,6 +41,9 @@ sam = sam_model_registry["vit_b"](checkpoint=ckpt_vit_b)
 predictor = SamPredictor(sam)
 mask_generator = SamAutomaticMaskGenerator(sam)
 
+resize = True
+resize_factor = 0.5
+
 # Iterate through folder
 for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
@@ -49,19 +52,28 @@ for subdir in os.listdir(root_folder):
             #image = Image.open(subdir_path + '/' + image_name)
             image = cv2.imread(subdir_path + '/' + image_name)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            if resize == True:
+                image_orig = image
+                width = int(image.shape[1] * resize_factor)
+                height = int(image.shape[0] * resize_factor)
+                dim = (width, height)
+                # resize image
+                image = cv2.resize(image, dim, interpolation = cv2.INTER_NEAREST)
             if not os.path.isdir(destination_folder + '/' + subdir):
                 os.makedirs(destination_folder + '/' + subdir)
             #image.save(destination_folder + '/' + subdir + '/'  + image_name)
             new_name = destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + '*' + '.png'
-            
+            print('Name: ' + new_name)
             ex = glob.glob(new_name)
             if len(ex) == 0:
                 # Generate the segmentation masks
                 masks = mask_generator.generate(image)
-
+                print('Masks detected:' + str(len(masks)))
                 for i in range(len(masks)):
-                    image_new = image.copy()
+                    image_new = image_orig.copy()
                     bool_mask = masks[i]['segmentation']
+                    if resize == True:
+                        bool_mask = np.resize(bool_mask, (image_new.shape[0], image_new.shape[1]))
                     #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
                     #object_features = skimage.measure.regionprops(labeled_image)
                     #object_areas = [objf["area"] for objf in object_features]
@@ -88,7 +100,8 @@ for subdir in os.listdir(root_folder):
             # So if still no mask is detected, iteration is done over the "negative" masks.
             ex = glob.glob(new_name)
             if len(ex) == 0:
-                image_new = image.copy()
+                print('Computing reverse mask: ')
+                image_new = image_orig.copy()
                 remaining_mask = np.full((image.shape[0], image.shape[1]), False)
                 for i in range(len(masks)):
                     mean_val = cv2.mean(image_new, masks[i]['segmentation'].astype(np.uint8))
@@ -103,7 +116,8 @@ for subdir in os.listdir(root_folder):
                 #         labeled_image[labeled_image == objf["label"]] = False
                 #     if objf["area"] == max(object_areas):
                 #         labeled_image[labeled_image == objf["label"]] = True
-
+                if resize == True:
+                    remaining_mask = np.resize(remaining_mask, (image_new.shape[0], image_new.shape[1]))
                 # White background
                 image_new[remaining_mask == True] = [255,255,255]
                 image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
