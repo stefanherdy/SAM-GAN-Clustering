@@ -21,11 +21,10 @@ import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 import datetime
-import os
-import skimage
-import skimage.measure
+import os 
 import glob
-
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+from skimage.transform import resize
 
 # Data path
 root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
@@ -41,7 +40,7 @@ sam = sam_model_registry["vit_b"](checkpoint=ckpt_vit_b)
 predictor = SamPredictor(sam)
 mask_generator = SamAutomaticMaskGenerator(sam)
 
-resize = True
+isresize = True
 resize_factor = 0.5
 
 # Iterate through folder
@@ -52,7 +51,7 @@ for subdir in os.listdir(root_folder):
             #image = Image.open(subdir_path + '/' + image_name)
             image = cv2.imread(subdir_path + '/' + image_name)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            if resize == True:
+            if isresize == True:
                 image_orig = image
                 width = int(image.shape[1] * resize_factor)
                 height = int(image.shape[0] * resize_factor)
@@ -65,6 +64,8 @@ for subdir in os.listdir(root_folder):
             new_name = destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + '*' + '.png'
             print('Name: ' + new_name)
             ex = glob.glob(new_name)
+            if len(ex) > 0:
+                print('Image already processed!')
             if len(ex) == 0:
                 # Generate the segmentation masks
                 masks = mask_generator.generate(image)
@@ -72,8 +73,8 @@ for subdir in os.listdir(root_folder):
                 for i in range(len(masks)):
                     image_new = image_orig.copy()
                     bool_mask = masks[i]['segmentation']
-                    if resize == True:
-                        bool_mask = np.resize(bool_mask, (image_new.shape[0], image_new.shape[1]))
+                    if isresize == True:
+                        bool_mask = resize(bool_mask, (image_new.shape[0], image_new.shape[1]))
                     #labeled_image, count = skimage.measure.label(bool_mask, return_num=True)
                     #object_features = skimage.measure.regionprops(labeled_image)
                     #object_areas = [objf["area"] for objf in object_features]
@@ -116,8 +117,8 @@ for subdir in os.listdir(root_folder):
                 #         labeled_image[labeled_image == objf["label"]] = False
                 #     if objf["area"] == max(object_areas):
                 #         labeled_image[labeled_image == objf["label"]] = True
-                if resize == True:
-                    remaining_mask = np.resize(remaining_mask, (image_new.shape[0], image_new.shape[1]))
+                if isresize == True:
+                    remaining_mask = resize(remaining_mask, (image_new.shape[0], image_new.shape[1]))
                 # White background
                 image_new[remaining_mask == True] = [255,255,255]
                 image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
