@@ -103,12 +103,19 @@ for subdir in os.listdir(root_folder):
             if len(ex) == 0:
                 print('Computing reverse mask: ')
                 image_new = image_orig.copy()
-                remaining_mask = np.full((image.shape[0], image.shape[1]), False)
+                remaining_mask = np.full((image_new.shape[0], image_new.shape[1]), False)
+                #if isresize == True:
+                #        bool_mask = resize(bool_mask, (image_new.shape[0], image_new.shape[1]))
                 for i in range(len(masks)):
-                    mean_val = cv2.mean(image_new, masks[i]['segmentation'].astype(np.uint8))
+                    if isresize == True:
+                        mask = resize(masks[i]['segmentation'], (image_new.shape[0], image_new.shape[1]))
+                    else:
+                        mask = masks[i]['segmentation']
+
+                    mean_val = cv2.mean(image_new, mask.astype(np.uint8))
                     mean_val = np.mean(mean_val[0:2])
                     if mean_val > 200: # or mean_val < 40:
-                        remaining_mask = remaining_mask + masks[i]['segmentation']
+                        remaining_mask = remaining_mask + mask
                 # labeled_image, count = skimage.measure.label(remaining_mask, return_num=True)
                 # object_features = skimage.measure.regionprops(labeled_image)
                 # object_areas = [objf["area"] for objf in object_features]
@@ -117,9 +124,9 @@ for subdir in os.listdir(root_folder):
                 #         labeled_image[labeled_image == objf["label"]] = False
                 #     if objf["area"] == max(object_areas):
                 #         labeled_image[labeled_image == objf["label"]] = True
+                # White background
                 if isresize == True:
                     remaining_mask = resize(remaining_mask, (image_new.shape[0], image_new.shape[1]))
-                # White background
                 image_new[remaining_mask == True] = [255,255,255]
                 image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
                 area_all = 0
