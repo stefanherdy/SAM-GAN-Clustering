@@ -20,8 +20,10 @@ import matplotlib.pyplot as plt
 def remove_scale(image, show = False):
     #image = cv2.imread(image_path)
     #im_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    # load gray image
     im_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     thresh = 15
+    # define kernel for dilation
     kernel = np.ones((5, 5), np.uint8)
     mask = cv2.threshold(im_gray, thresh, 255, cv2.THRESH_BINARY_INV)
     mask = cv2.dilate(mask[1], kernel, iterations=7)
@@ -32,5 +34,7 @@ def remove_scale(image, show = False):
         cv2.imshow('Image w/o Scale',numpy_horizontal)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+    return image
 
-# just for tests, remove_scale('C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected/Riccia beyrichiana/ABry_531_Riccia_beyrichiana_proximal_rem31.png')
+# __name__ == "__main__"
+    # just for tests, remove_scale('C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected/Riccia beyrichiana/ABry_531_Riccia_beyrichiana_proximal_rem31.png')
