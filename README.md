@@ -4,6 +4,9 @@
 This is a code implementation of Facebooks "Segment Anything Model"
 A sample script how to utilize the Segment Anything Model to automatically segment microscopy images of spores
 
+A detailed description was published on Medium: 
+https://medium.com/@stefan.herdy/use-meta-ais-segment-anything-model-to-autosegment-microscopy-images-9a286837c56b
+
 # Table of Contents
 
     Installation
