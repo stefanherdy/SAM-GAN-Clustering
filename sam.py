@@ -142,6 +142,7 @@ for subdir in os.listdir(root_folder):
                     if remaining_mask[10,10] == True:
                         # image_new = remove_scale(image_new)
                         cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_rem' + str(i) + '.png', image_new)
+            # Delete loaded images to release memory and prevent loop from slowing dowm
             del image
             if len(ex) == 0:
                 del image_new, image_orig
