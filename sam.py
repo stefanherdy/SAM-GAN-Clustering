@@ -28,6 +28,7 @@ from utils import remove_scale
 from datetime import datetime
 
 # Data path
+# Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
 root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
 # Path to store the segmented images
 destination_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected"
@@ -43,7 +44,7 @@ mask_generator = SamAutomaticMaskGenerator(sam)
 
 isresize = True
 resize_factor = 0.5
-
+cnt = 0
 # Iterate through folder
 for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
@@ -99,6 +100,8 @@ for subdir in os.listdir(root_folder):
                         # Use coordinates [10,10] instead of [0,0], because the model sometimes has problems with the image edges and labels the first few pixel rows incorrect
                         if bool_mask[10,10] == False:
                             cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + str(i) + '.png', image_new)
+                            cnt += 1
+                            print('Number of analyzed Images: ' + str(cnt))
             # Sometimes the models label everything but the object of interest. 
             # So if still no mask is detected, iteration is done over the "negative" masks.
             ex = glob.glob(new_name)
@@ -144,6 +147,8 @@ for subdir in os.listdir(root_folder):
                     if remaining_mask[10,10] == True:
                         # image_new = remove_scale(image_new)
                         cv2.imwrite(destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_rem' + str(i) + '.png', image_new)
+                        cnt += 1
+                        print('Number of analyzed Images: ' + str(cnt))
             # Delete loaded images to release memory and prevent loop from slowing dowm
             del image
             if len(ex) == 0:
