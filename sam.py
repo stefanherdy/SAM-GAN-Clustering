@@ -25,6 +25,7 @@ import glob
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 from skimage.transform import resize
 from utils import remove_scale
+from datetime import datetime
 
 # Data path
 root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs/"
@@ -48,6 +49,7 @@ for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
     if os.path.isdir(subdir_path) and "Riccia" in subdir:
         for image_name in os.listdir(subdir_path):
+            print(datetime.now())
             #image = Image.open(subdir_path + '/' + image_name)
             image = cv2.imread(subdir_path + '/' + image_name)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
