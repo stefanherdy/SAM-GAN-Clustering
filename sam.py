@@ -65,7 +65,7 @@ for subdir in os.listdir(root_folder):
                 os.makedirs(destination_folder + '/' + subdir)
             #image.save(destination_folder + '/' + subdir + '/'  + image_name)
             new_name = destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + '*' + '.png'
-            print('Name: ' + new_name)
+            print('Name: ' + subdir + '/' + image_name)
             ex = glob.glob(new_name)
             if len(ex) > 0:
                 print('Image already processed!')
