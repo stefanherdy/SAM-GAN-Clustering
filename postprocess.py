@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+"""
+Script Name: postprocess.py
+Author: Stefan Herdy
+Date: 25.07.2023
+Description: 
+Postprocessing Script
+"""
+
+import os
+import cv2
+import numpy as np
+import glob
+
+def add_white_padding(image, padding_size=30):
+    # Get the current image size
+    height, width, channels = image.shape
+
+    # Calculate the new size after adding padding
+    new_height = height + 2 * padding_size
+    new_width = width + 2 * padding_size
+
+    # Create a white background with the new size
+    padded_image = 255 * np.ones((new_height, new_width, channels), dtype=np.uint8)
+
+    # Calculate the positions to place the original image
+    x_position = padding_size
+    y_position = padding_size
+
+    # Place the original image in the center of the white background
+    padded_image[y_position:y_position+height, x_position:x_position+width] = image
+
+    return padded_image
+
+def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
+    for subdir in os.listdir(input_dir):
+        subdir_path = os.path.join(input_dir, subdir)
+        for file in os.listdir(subdir_path):
+            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                input_path = os.path.join(input_dir, subdir, file)
+                output_subdir_path = os.path.join(output_dir, subdir)
+                ex = glob.glob(os.path.join(output_subdir_path, file))
+                if len(ex) > 0:
+                    print('Image already processed!')
+                if len(ex) == 0:
+                    
+                    if not os.path.exists(output_subdir_path):
+                        os.makedirs(output_subdir_path)
+
+                    img = cv2.imread(input_path)
+                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    _, threshold = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
+                    # cv2.imshow('image window', threshold)
+                    # # add wait key. window waits until user presses a key
+                    # cv2.waitKey(0)
+                    # # and finally destroy/close all open windows
+                    # cv2.destroyAllWindows()
+                    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    segmentation = np.where(threshold < 255)
+                    if len(segmentation[0]) > 0:
+                        x_min = int(np.min(segmentation[1]))
+                        x_max = int(np.max(segmentation[1]))
+                        y_min = int(np.min(segmentation[0]))
+                        y_max = int(np.max(segmentation[0]))
+                        #for i, contour in enumerate(contours):
+                        #    x, y, w, h = cv2.boundingRect(contour)
+                        cropped = img[y_min:y_max, x_min:x_max]
+                        cropped = add_white_padding(cropped)
+                        output_path = os.path.join(output_subdir_path, file)
+                        cv2.imwrite(output_path, cropped)
+                        print('Saving image to: ' + file)
+                    else:
+                        print('Image contains no spores!')
+                    
+
+if __name__ == "__main__":
+    # Data path
+    # Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
+    root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected/"
+    # Path to store the segmented images
+    destination_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_cropped"
+
+    crop_spores_in_directory(root_folder, destination_folder)
