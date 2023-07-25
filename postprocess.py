@@ -12,6 +12,7 @@ import os
 import cv2
 import numpy as np
 import glob
+import skimage.measure
 
 def add_white_padding(image, padding_size=30):
     # Get the current image size
@@ -33,6 +34,21 @@ def add_white_padding(image, padding_size=30):
 
     return padded_image
 
+def keep_biggest_connected_mask(threshold_array):
+    # Find connected components in the threshold array
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(threshold_array.astype(np.uint8))
+    if num_labels > 1:
+        # Find the index of the largest connected component (excluding the background)
+        largest_component_idx = np.argmax(stats[1:, cv2.CC_STAT_AREA]) + 1
+
+        # Create a new array with only the largest connected component set to True
+        biggest_mask = np.where(labels == largest_component_idx, 1, 0).astype(np.bool)
+    else:
+        biggest_mask = threshold_array
+
+    return biggest_mask
+    
+
 def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
     for subdir in os.listdir(input_dir):
         subdir_path = os.path.join(input_dir, subdir)
@@ -50,14 +66,20 @@ def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
 
                     img = cv2.imread(input_path)
                     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    _, threshold = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
+                    _, (threshold) = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
+                    threshold = keep_biggest_connected_mask(threshold)
                     # cv2.imshow('image window', threshold)
                     # # add wait key. window waits until user presses a key
                     # cv2.waitKey(0)
                     # # and finally destroy/close all open windows
                     # cv2.destroyAllWindows()
-                    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    segmentation = np.where(threshold < 255)
+                    #threshold[labeled_image == True] = [255]
+                    # cv2.imshow('image window',threshold.astype(np.uint8)*255)
+                    # add wait key. window waits until user presses a key
+                    # cv2.waitKey(0)
+                    # and finally destroy/close all open windows
+                    # cv2.destroyAllWindows()
+                    segmentation = np.where(threshold == True)
                     if len(segmentation[0]) > 0:
                         x_min = int(np.min(segmentation[1]))
                         x_max = int(np.max(segmentation[1]))
