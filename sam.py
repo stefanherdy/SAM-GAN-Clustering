@@ -66,10 +66,10 @@ for subdir in os.listdir(root_folder):
             #image.save(destination_folder + '/' + subdir + '/'  + image_name)
             new_name = destination_folder + '/' + subdir + '/'  + os.path.splitext(image_name)[0] + '_' + '*' + '.png'
             print('Name: ' + subdir + '/' + image_name)
-            ex = glob.glob(new_name)
-            if len(ex) > 0:
+            processed_imgs = glob.glob(new_name)
+            if len(processed_imgs) > 0:
                 print('Image already processed!')
-            if len(ex) == 0:
+            if len(processed_imgs) == 0:
                 # Generate the segmentation masks
                 masks = mask_generator.generate(image)
                 print('Masks detected:' + str(len(masks)))
@@ -104,8 +104,8 @@ for subdir in os.listdir(root_folder):
                             print('Number of analyzed Images: ' + str(cnt))
             # Sometimes the models label everything but the object of interest. 
             # So if still no mask is detected, iteration is done over the "negative" masks.
-            ex = glob.glob(new_name)
-            if len(ex) == 0:
+            processed_imgs = glob.glob(new_name)
+            if len(processed_imgs) == 0:
                 print('Computing reverse mask: ')
                 image_new = image_orig.copy()
                 remaining_mask = np.full((image_new.shape[0], image_new.shape[1]), False)
@@ -151,5 +151,5 @@ for subdir in os.listdir(root_folder):
                         print('Number of analyzed Images: ' + str(cnt))
             # Delete loaded images to release memory and prevent loop from slowing dowm
             del image
-            if len(ex) == 0:
+            if len(processed_imgs) == 0:
                 del image_new, image_orig
