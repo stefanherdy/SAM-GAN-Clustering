@@ -66,7 +66,7 @@ def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
 
                     img = cv2.imread(input_path)
                     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    _, (threshold) = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
+                    _, (threshold) = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)   
                     threshold = keep_biggest_connected_mask(threshold)
                     # cv2.imshow('image window', threshold)
                     # # add wait key. window waits until user presses a key
