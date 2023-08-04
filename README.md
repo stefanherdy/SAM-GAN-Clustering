@@ -24,7 +24,9 @@ $ git clone https://github.com/stefanherdy/use-segment-anything-model-to-autoseg
 -  First, download the desired Segment Anything Models from the original GitHub page:
    https://github.com/facebookresearch/segment-anything
 -  Copy the models to your model folder
--  Set your data path, your destination path and your model path and run the script
+-  Set your data path, your destination path and your model path and run the script sam.py
+- Optionally, you can run postprocess.py to crop the selected masks and delete mask artifacts to keep the biggest one
+- The script classify.py is runs a pytorch classifier. The images and the regarding classes have to be in the subdirectories of ./imgs/ with set_1/, set_2/, set_3/ etc.
 
 # License
 
