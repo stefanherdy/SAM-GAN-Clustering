@@ -72,11 +72,11 @@ def main():
     workers = 2
 
     # Batch size during training
-    batch_size = 50
+    batch_size = 128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
-    image_size = 128
+    image_size = 64
 
 
     # Number of channels in the training images. For color images this is 3
@@ -86,13 +86,13 @@ def main():
     nz = 100
 
     # Size of feature maps in generator
-    ngf = 128
+    ngf = 64
 
     # Size of feature maps in discriminator+
-    ndf = 32
+    ndf = 64
 
     # Number of training epochs
-    num_epochs = 1
+    num_epochs = 1000
 
     # Learning rate for optimizers
     lr = 0.0002
@@ -158,9 +158,9 @@ def main():
     plt.figure(figsize=(8,8))
     plt.axis("off")
     plt.title("Training Images")
-    image = np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0))
-    plt.imshow(image)
-    plt.savefig('test', dpi=300)
+    plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+    plt.savefig('test_64', dpi=300)
+
 
 
     ######################################################################
@@ -229,29 +229,25 @@ def main():
             self.ngpu = ngpu
             self.main = nn.Sequential(
                 # input is Z, going into a convolution
-                nn.ConvTranspose2d(     nz, ngf * 16, 4, 1, 0, bias=False),
-                nn.BatchNorm2d(ngf * 16),
-                nn.ReLU(True),
-                # state size. (ngf*16) x 4 x 4
-                nn.ConvTranspose2d(ngf * 16, ngf * 8, 4, 2, 1, bias=False),
+                nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
                 nn.BatchNorm2d(ngf * 8),
                 nn.ReLU(True),
-                # state size. (ngf*8) x 8 x 8
+                # state size. ``(ngf*8) x 4 x 4``
                 nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ngf * 4),
                 nn.ReLU(True),
-                # state size. (ngf*4) x 16 x 16 
-                nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+                # state size. ``(ngf*4) x 8 x 8``
+                nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ngf * 2),
                 nn.ReLU(True),
-                # state size. (ngf*2) x 32 x 32
-                nn.ConvTranspose2d(ngf * 2,     ngf, 4, 2, 1, bias=False),
+                # state size. ``(ngf*2) x 16 x 16``
+                nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ngf),
                 nn.ReLU(True),
-                # state size. (ngf) x 64 x 64
-                nn.ConvTranspose2d(    ngf,      nc, 4, 2, 1, bias=False),
+                # state size. ``(ngf) x 32 x 32``
+                nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
                 nn.Tanh()
-                # state size. (nc) x 128 x 128
+                # state size. ``(nc) x 64 x 64``
             )
 
         def forward(self, input):
@@ -306,29 +302,24 @@ def main():
             super(Discriminator, self).__init__()
             self.ngpu = ngpu
             self.main = nn.Sequential(
-                # input is (nc) x 128 x 128
-                nn.Conv2d(nc, ndf, 4, stride=2, padding=1, bias=False), 
+                # input is ``(nc) x 64 x 64``
+                nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
                 nn.LeakyReLU(0.2, inplace=True),
-                # state size. (ndf) x 64 x 64
-                nn.Conv2d(ndf, ndf * 2, 4, stride=2, padding=1, bias=False),
+                # state size. ``(ndf) x 32 x 32``
+                nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ndf * 2),
                 nn.LeakyReLU(0.2, inplace=True),
-                # state size. (ndf*2) x 32 x 32
-                nn.Conv2d(ndf * 2, ndf * 4, 4, stride=2, padding=1, bias=False),
+                # state size. ``(ndf*2) x 16 x 16``
+                nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ndf * 4),
                 nn.LeakyReLU(0.2, inplace=True),
-                # state size. (ndf*4) x 16 x 16 
-                nn.Conv2d(ndf * 4, ndf * 8, 4, stride=2, padding=1, bias=False),
+                # state size. ``(ndf*4) x 8 x 8``
+                nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
                 nn.BatchNorm2d(ndf * 8),
                 nn.LeakyReLU(0.2, inplace=True),
-                # state size. (ndf*8) x 8 x 8
-                nn.Conv2d(ndf * 8, ndf * 16, 4, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(ndf * 16),
-                nn.LeakyReLU(0.2, inplace=True),
-                # state size. (ndf*16) x 4 x 4
-                nn.Conv2d(ndf * 16, 1, 4, stride=1, padding=0, bias=False),
+                # state size. ``(ndf*8) x 4 x 4``
+                nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
                 nn.Sigmoid()
-                # state size. 1
             )
 
         def forward(self, input):
@@ -579,7 +570,7 @@ def main():
     plt.xlabel("iterations")
     plt.ylabel("Loss")
     plt.legend()
-    #plt.show()
+    plt.show()
 
 
     ######################################################################
@@ -597,7 +588,7 @@ def main():
     ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
     ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-    #HTML(ani.to_jshtml())
+    HTML(ani.to_jshtml())
 
 
     ######################################################################
@@ -622,7 +613,7 @@ def main():
     plt.axis("off")
     plt.title("Fake Images")
     plt.imshow(np.transpose(img_list[-1],(1,2,0)))
-    #plt.show()
+    plt.show()
 
 
     ######################################################################
