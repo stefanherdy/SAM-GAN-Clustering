@@ -8,4 +8,6 @@
 /sam_models
 /Sporenbilder
 result_pictures/
-gan_128.py
+generated_imgs_*
+_Sortierung
+commands.txt

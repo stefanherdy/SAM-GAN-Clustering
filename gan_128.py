@@ -143,6 +143,7 @@ def main():
                                 transforms.CenterCrop(image_size),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.RandomVerticalFlip(),
+                                transforms.RandomRotation(180, fill=255),
                                 transforms.ToTensor(),
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                             ]))
