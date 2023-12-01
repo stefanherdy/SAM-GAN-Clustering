@@ -11,3 +11,6 @@ result_pictures/
 generated_imgs_*
 _Sortierung
 commands.txt
+sam_riccia.py
+gan_128_pretr.py
+__pycache__
