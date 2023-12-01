@@ -66,7 +66,7 @@ def segment_images(args, subdir_path, image_name, destination_folder):
             image_new = cv2.cvtColor(image_new, cv2.COLOR_RGB2BGR)
 
             area = masks[i]['area']
-            area_thresh = image.shape[0]/10*image.shape[1]/10
+            area_thresh = image.shape[0]*image.shape[1]*args.area_thresh_ratio
             # Save image if area is bigger than a specified threshold 
             if area > area_thresh:
                 # We assume, that there are no spores etc. at the corners of the images.
@@ -84,7 +84,7 @@ def segment_images(args, subdir_path, image_name, destination_folder):
         print('Computing reverse mask: ')
         image_new = image_orig.copy()
         background_mask = np.full((image_new.shape[0], image_new.shape[1]), False)
-        
+
         for i in range(len(masks)):
             if args.isresize == True:
                 mask = resize(masks[i]['segmentation'], (image_new.shape[0], image_new.shape[1]))
@@ -119,7 +119,7 @@ def segment_images(args, subdir_path, image_name, destination_folder):
         for j in range(len(masks)):
             area_all = area_all + masks[j]['area']
         area = image.shape[0]*image.shape[1] - area_all
-        area_thresh = image.shape[0]/15*image.shape[1]/15
+        area_thresh = image.shape[0]*image.shape[1]*args.area_thresh_ratio
         # Save image if area is bigger than a specified threshold 
         if area > area_thresh:
             # We assume, that there are no spores etc. at the corners of the images.
@@ -141,6 +141,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("AutoSeg")
     parser.add_argument("--isresize", type=bool, default=False, help="Specify if images should be resized to increase speed (output has original size again)")
     parser.add_argument("--resize_factor", type=int, default=0.5, help="Resize Factor. Height and width of images is multiplied by this factor if isresize = True")
+    parser.add_argument("--area_thresh_ratio", type=int, default=0.01, help="Ratio that defines the minimun area a mask must have to be recognized (area_tresh_ratio = min_mask_area/total_image_area).")
     args = parser.parse_args()
 
     # Data path

@@ -28,6 +28,15 @@ $ git clone https://github.com/stefanherdy/use-segment-anything-model-to-autoseg
 - Optionally, you can run postprocess.py to crop the selected masks and delete mask artifacts to keep the biggest one
 - The script classify.py is runs a pytorch classifier. The images and the regarding classes have to be in the subdirectories of ./imgs/ with set_1/, set_2/, set_3/ etc.
 
+- Run sam.py with "python train.py".
+    You can specify the following parameters:
+    --isresize", type=bool, default=False, help="Specify if images should be resized to increase speed (output has original size again)"
+    --resize_factor", type=int, default=0.5, help="Resize Factor. Height and width of images is multiplied by this factor if isresize = True"
+    --area_thresh_ratio", type=int, default=0.01, help="Ratio that defines the minimun area a mask must have to be recognized (area_tresh_ratio = min_mask_area/total_image_area)."
+
+        Example usage:
+        "python3 sam.py --isresize True --resize_factor 0.5 --area_thresh_ratio 0.005
+
 # License
 
 This project is licensed under the MIT License.
