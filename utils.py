@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Script Name: utols.py
+Script Name: utils.py
 Author: Stefan Herdy
 Date: 15.06.2023
 Description: 
