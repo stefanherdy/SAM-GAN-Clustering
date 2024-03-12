@@ -10,15 +10,17 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
+import os
+import json
 
 
 def main(args):
     # Root path
     if args.test == 'generated':
-        root_data_path = './fake_imgs/'
+        root_data_path = './path/to/fake_imgs/'
     if args.test == 'norm':
-        root_data_path = './_Sortierung/'
-
+        root_data_path = './path/to/real_imgs/'
+    records_path = './records/'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Define transformations
@@ -37,10 +39,12 @@ def main(args):
     train_dataset, val_dataset = random_split(dataset, [num_train, num_val])
 
     # Create dataloaders
+    print('Loading data...')
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
     # Load model
+    print('Loading model...')
     model = resnet50(pretrained=True)
     num_classes = len(dataset.classes)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -51,9 +55,12 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learn_rate)
 
+    corrects = {}
+
     # Training loop
     for epoch in range(args.num_epochs):
         model.train()
+        print(f'Epoch {epoch+1}/{args.num_epochs}')
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -76,6 +83,16 @@ def main(args):
 
             accuracy = correct / total
             print(f'Epoch [{epoch+1}/{args.num_epochs}], Accuracy: {accuracy:.4f}')
+        
+            corrects[epoch] = accuracy
+        
+            if not os.path.exists(records_path):
+                print(f'Creating records folder at {records_path}')
+                os.makedirs(records_path)
+            
+            print(f'Saving records to {records_path}/validation_accuracy_{args.test}.json')
+            json.dump(corrects, open(f'{records_path}/validation_accuracy_{args.test}.json', 'w'))
+
 
         if (epoch + 1) % args.save_confusion_interval == 0:
             model.eval()
@@ -110,7 +127,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("AutoSeg")
     parser.add_argument("--learn_rate", type=int, default=0.001, help='Learn rate of optimizer')
     parser.add_argument("--num_epochs", type=int, default=200)
-    parser.add_argument("--eval_interval", type=int, default=5, help="Epochs between evaluation")
+    parser.add_argument("--eval_interval", type=int, default=1, help="Epochs between evaluation")
     parser.add_argument("--train_val_ratio", type=float, default=0.8, help="Ratio between train and evaluation data")
     parser.add_argument("--save_confusion_interval", type=int, default=5, help="Epochs between confusion matrix save")
     parser.add_argument("--test", choices=['norm', 'generated'], default='generated', help="Defines input folder, "

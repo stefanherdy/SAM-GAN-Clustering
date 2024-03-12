@@ -34,6 +34,11 @@ def segment_images(args, subdir_path, image_name, destination_folder):
     image = cv2.imread(os.path.join(subdir_path, image_name))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image_orig = image
+
+    if image.shape[0] > args.size_thresh or image.shape[1] > args.size_thresh:
+        args.isresize = True
+    else:
+        args.isresize = False
     
     if args.isresize == True:
         width = int(image.shape[1] * args.resize_factor)
@@ -87,7 +92,7 @@ def segment_images(args, subdir_path, image_name, destination_folder):
 
         for i in range(len(masks)):
             if args.isresize == True:
-                mask = resize(masks[i]['segmentation'], (image_new.shape[0], image_new.shape[1]))
+                mask = resize(masks[i]['segmentation'], (image_new.shape[0], image_new.shape[1])).astype(np.int)
             else:
                 mask = masks[i]['segmentation']
 
@@ -100,7 +105,7 @@ def segment_images(args, subdir_path, image_name, destination_folder):
 
         # White background
         if args.isresize == True:
-            background_mask = resize(background_mask, (image_new.shape[0], image_new.shape[1]))
+            background_mask = resize(background_mask, (image_new.shape[0], image_new.shape[1])).astype(np.int)
         object_mask = ~background_mask
 
         # Just keep largest mask 
@@ -139,8 +144,9 @@ def segment_images(args, subdir_path, image_name, destination_folder):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("AutoSeg")
-    parser.add_argument("--isresize", type=bool, default=False, help="Specify if images should be resized to increase speed (output has original size again)")
+    parser.add_argument("--isresize", type=bool, default=True, help="Specify if images should be resized to increase speed (output has original size again)")
     parser.add_argument("--resize_factor", type=int, default=0.5, help="Resize Factor. Height and width of images is multiplied by this factor if isresize = True")
+    parser.add_argument("--size_thresh", type=int, default=2000, help="Threshold of minimum image size. If image is bigger than this threshold, it will be resized.")
     parser.add_argument("--area_thresh_ratio", type=int, default=0.01, help="Ratio that defines the minimun area a mask must have to be recognized (area_tresh_ratio = min_mask_area/total_image_area).")
     args = parser.parse_args()
 
@@ -162,6 +168,7 @@ if __name__ == "__main__":
     # Iterate through folder
     for subdir in os.listdir(root_folder):
         subdir_path = os.path.join(root_folder, subdir)
-        for image_name in os.listdir(subdir_path):
-            print(datetime.now())
-            segment_images(args, subdir_path, image_name, destination_folder)
+        if os.path.exists(subdir_path):
+            for image_name in os.listdir(subdir_path):
+                print(datetime.now())
+                segment_images(args, subdir_path, image_name, destination_folder)
