@@ -1,3 +1,26 @@
+#!/usr/bin/env python3
+
+"""
+Script Name: classify.py
+Author: Stefan Herdy
+Date: 07.12.2023
+Description: 
+Script to train a classification model and generate records of the model's performance.
+Two different tests can be performed: one with real data and one with generated data.
+The records can be used with read_records.py to compare the performance of the classification model with real and with generated data.
+
+The script uses a pretrained ResNet50 model and the ImageFolder class from torchvision to load the data.
+The model is trained with the Adam optimizer and the CrossEntropyLoss criterion.
+The model's performance is evaluated with the accuracy and the confusion matrix.
+The records are saved as json files and the confusion matrix is saved as a plot and as a txt file.
+
+Usage: 
+- To be able to run the "generated" test, you need to have generated fake images with the GAN. 
+  Run the gan.py or the gan_128.py script to generate the fake images.
+- Change the root_data_path to the path of the real or generated images.
+- Run the script with the desired parameters.
+"""
+
 import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
@@ -13,24 +36,23 @@ import argparse
 import os
 import json
 
+tests = ['norm', 'generated']
 
-def main(args):
+
+def main(args, test_num):
     # Root path
     if args.test == 'generated':
-        root_data_path = './path/to/fake_imgs/'
+        root_data_path = './path/to/fake_imgs//'
     if args.test == 'norm':
         root_data_path = './path/to/real_imgs/'
-    records_path = './records/'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Define transformations
     transform = transforms.Compose([
         transforms.Resize((56, 56)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    # Create the dataset
     dataset = ImageFolder(root=root_data_path, transform=transform)
 
     num_total = len(dataset)
@@ -38,12 +60,10 @@ def main(args):
     num_val = num_total - num_train
     train_dataset, val_dataset = random_split(dataset, [num_train, num_val])
 
-    # Create dataloaders
     print('Loading data...')
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
-    # Load model
     print('Loading model...')
     model = resnet50(pretrained=True)
     num_classes = len(dataset.classes)
@@ -51,13 +71,11 @@ def main(args):
 
     model.to(device)
 
-    # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learn_rate)
 
     corrects = {}
 
-    # Training loop
     for epoch in range(args.num_epochs):
         model.train()
         print(f'Epoch {epoch+1}/{args.num_epochs}')
@@ -86,12 +104,12 @@ def main(args):
         
             corrects[epoch] = accuracy
         
-            if not os.path.exists(records_path):
-                print(f'Creating records folder at {records_path}')
-                os.makedirs(records_path)
+            if not os.path.exists(args.records_path):
+                print(f'Creating records folder at {args.records_path}')
+                os.makedirs(args.records_path)
             
-            print(f'Saving records to {records_path}/validation_accuracy_{args.test}.json')
-            json.dump(corrects, open(f'{records_path}/validation_accuracy_{args.test}.json', 'w'))
+            print(f'Saving records of test {test_num} to {args.records_path}/validation_accuracy_{args.test}_{test_num}.json')
+            json.dump(corrects, open(f'{args.records_path}/validation_accuracy_{args.test}_{test_num}.json', 'w'))
 
 
         if (epoch + 1) % args.save_confusion_interval == 0:
@@ -110,7 +128,6 @@ def main(args):
 
             cm = confusion_matrix(all_labels, all_predicted)
 
-            # Plot confusion matrix
             plt.figure(figsize=(8, 6))
             sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(all_labels), yticklabels=np.unique(all_labels))
             plt.xlabel('Predicted')
@@ -119,7 +136,6 @@ def main(args):
             plt.savefig(f'confusion_matrix_plot_{args.test}_{epoch+1}.png')
             plt.close()
             
-            # Save confusion matrix values
             np.savetxt(f'confmat_epoch_{args.test}_{epoch+1}.txt', cm, fmt='%d')
             print(f'Confusion matrix plot and values saved for epoch {epoch+1}')
 
@@ -130,9 +146,15 @@ if __name__ == "__main__":
     parser.add_argument("--eval_interval", type=int, default=1, help="Epochs between evaluation")
     parser.add_argument("--train_val_ratio", type=float, default=0.8, help="Ratio between train and evaluation data")
     parser.add_argument("--save_confusion_interval", type=int, default=5, help="Epochs between confusion matrix save")
-    parser.add_argument("--test", choices=['norm', 'generated'], default='generated', help="Defines input folder, "
+    parser.add_argument("--test", choices=tests, default='generated', help="Defines input folder, "
                         "'norm' = raw data, 'generated' = GAN-generated data")
     parser.add_argument("--batch_size", type=int, default=8, help="Batch Size")
+    parser.add_argument("--num_tests", type=int, default=15, help="Number of tests to run")
+    parser.add_argument("--records_path", type=str, default='./records', help="Path to records folder")
+
     args = parser.parse_args()
 
-    main(args)
+    
+    for i in range(args.num_tests):
+        print(f'Running test {i+1}/{args.num_tests}')
+        main(args, i+1)

@@ -5,7 +5,15 @@ Script Name: postprocess.py
 Author: Stefan Herdy
 Date: 25.07.2023
 Description: 
-Postprocessing Script
+Description: 
+Script to postprocess images by cropping spores and adding white padding around them. 
+The processed images are saved in a specified output directory.
+
+Usage:
+- Make sure that you have run the sam.py script to get the pre-selected images.
+- Place the images to be processed in the input directory specified by 'root_folder'.
+- Specify the output directory where the processed images will be saved using 'destination_folder'.
+- Run the script to process the images and save the results.
 """
 
 import os
@@ -99,8 +107,8 @@ def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
 if __name__ == "__main__":
     # Data path
     # Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
-    root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected/"
+    root_folder = "path/to/your/data/"
     # Path to store the segmented images
-    destination_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_cropped"
+    destination_folder = "path/to/your/destination/folder/"
 
     crop_spores_in_directory(root_folder, destination_folder)
