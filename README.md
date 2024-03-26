@@ -50,4 +50,4 @@ The code in this repository was used for further analysis of microscope images o
 # License
 
 This project is licensed under the MIT License.
-:copyright: 2023 Stefan Herdy
+©️ 2023 Stefan Herdy
