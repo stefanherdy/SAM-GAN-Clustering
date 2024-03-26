@@ -1,9 +1,23 @@
+#!/usr/bin/env python3
+
+"""
+Script Name: manual_check.py
+Author: Stefan Herdy
+Date: 13.03.2024
+Description: 
+Small script to manually check the images segmented with sam.py
+This script is used to manually check the images segmented with the sam.py script.
+
+Usage: 
+- Make sure that you have the images segmented with the sam.py script in the root folder.
+- Run the script to manually check the images.
+"""
 import os
 import cv2
 import glob
 
-root_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_selected/"
-destination_folder = "C:/Users/stefa/Desktop/repos/use-segment-anything-model-to-autosegment-microscope-images/riccia_imgs_checked"
+root_folder = "path/to/your/folder/with/images"
+destination_folder = "path/to/your/destination/folder/with/images"
 
 for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
@@ -15,10 +29,10 @@ for subdir in os.listdir(root_folder):
         # Load the image from the given path
         image_path = os.path.join(root_folder, subdir, file)
         image = cv2.imread(image_path)
-        ex = glob.glob(os.path.join(new_name))
-        if len(ex) > 0:
+        file_count = glob.glob(os.path.join(new_name))
+        if len(file_count) > 0:
             print('Image already processed!')
-        if len(ex) == 0:
+        if len(file_count) == 0:
 
             # Display the image
             image_cropped = cv2.resize(image, (512,512))
