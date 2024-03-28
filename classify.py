@@ -155,7 +155,7 @@ def main(args, test_num):
             plt.xlabel('Predicted')
             plt.ylabel('Actual')
             plt.title(f'Confusion Matrix - Epoch {epoch+1}')
-            plt.savefig(f'confusion_matrix_plot_{args.test}_{epoch+1}.png')
+            plt.savefig(f'regression_matrix_plot_{args.test}_{epoch+1}.png')
             plt.close()
             
             np.savetxt(f'confmat_epoch_{args.test}_{epoch+1}.txt', cm, fmt='%d')
