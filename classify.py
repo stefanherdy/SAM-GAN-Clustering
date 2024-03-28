@@ -42,7 +42,7 @@ tests = ['norm', 'generated']
 def main(args, test_num):
     # Root path
     if args.test == 'generated':
-        root_data_path = './path/to/fake_imgs//'
+        root_data_path = './path/to/fake_imgs/'
     if args.test == 'norm':
         root_data_path = './path/to/real_imgs/'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -116,6 +116,8 @@ def main(args, test_num):
             model.eval()
             all_labels = []
             all_predicted = []
+            all_outputs = []
+            regression_matrix = np.zeros((num_classes, num_classes))
 
             with torch.no_grad():
                 for inputs, labels in val_loader:
@@ -125,6 +127,18 @@ def main(args, test_num):
 
                     all_labels.extend(labels.cpu().numpy())
                     all_predicted.extend(predicted.cpu().numpy())
+                    all_outputs.extend(outputs.cpu().numpy())
+
+            for k, output in enumerate(all_outputs):
+                    regression_matrix[all_labels[k]] = regression_matrix[all_labels[k]] + output
+
+            min_vals = np.min(regression_matrix, axis=1, keepdims=True)
+            max_vals = np.max(regression_matrix, axis=1, keepdims=True)
+
+            scaled_regression_matrix = (regression_matrix - min_vals) / (max_vals - min_vals)
+            sum_vals = np.sum(scaled_regression_matrix, axis=1, keepdims=True)
+
+            scaled_regression_matrix = scaled_regression_matrix / sum_vals
 
             cm = confusion_matrix(all_labels, all_predicted)
 
@@ -135,8 +149,17 @@ def main(args, test_num):
             plt.title(f'Confusion Matrix - Epoch {epoch+1}')
             plt.savefig(f'confusion_matrix_plot_{args.test}_{epoch+1}.png')
             plt.close()
+
+            plt.figure(figsize=(8, 6))
+            sns.heatmap(scaled_regression_matrix, annot=True, fmt='.2f', cmap='Blues', xticklabels=np.unique(all_labels), yticklabels=np.unique(all_labels))
+            plt.xlabel('Predicted')
+            plt.ylabel('Actual')
+            plt.title(f'Confusion Matrix - Epoch {epoch+1}')
+            plt.savefig(f'confusion_matrix_plot_{args.test}_{epoch+1}.png')
+            plt.close()
             
             np.savetxt(f'confmat_epoch_{args.test}_{epoch+1}.txt', cm, fmt='%d')
+            np.savetxt(f'regmat_epoch_{args.test}_{epoch+1}.txt', scaled_regression_matrix, fmt='%.2f')
             print(f'Confusion matrix plot and values saved for epoch {epoch+1}')
 
 if __name__ == "__main__":
@@ -145,7 +168,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_epochs", type=int, default=200)
     parser.add_argument("--eval_interval", type=int, default=1, help="Epochs between evaluation")
     parser.add_argument("--train_val_ratio", type=float, default=0.8, help="Ratio between train and evaluation data")
-    parser.add_argument("--save_confusion_interval", type=int, default=5, help="Epochs between confusion matrix save")
+    parser.add_argument("--save_confusion_interval", type=int, default=50, help="Epochs between confusion matrix save")
     parser.add_argument("--test", choices=tests, default='generated', help="Defines input folder, "
                         "'norm' = raw data, 'generated' = GAN-generated data")
     parser.add_argument("--batch_size", type=int, default=8, help="Batch Size")
