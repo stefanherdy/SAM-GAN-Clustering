@@ -215,6 +215,8 @@ def main():
     D_losses = []
     iters = 0
 
+    top_images = []
+
     print("Starting Training Loop...")
     # For each epoch
     for epoch in range(num_epochs):
@@ -232,6 +234,18 @@ def main():
             # Calculate gradients for D in backward pass
             errD_real.backward()
             D_x = output.mean().item()
+
+            # Store top 10 images (most realistic)
+            for j in range(b_size):
+                score = output[j].item()
+                image = fake[j].detach().cpu().numpy()
+                if len(top_images) < 10:
+                    top_images.append((score, image))
+                else:
+                    min_score, _ = min(top_images, key=lambda x: x[0])
+                    if score > min_score:
+                        top_images.remove(min(top_images, key=lambda x: x[0]))
+                        top_images.append((score, image))
 
             # Generate batch of latent vectors
             noise = torch.randn(b_size, nz, 1, 1, device=device)
@@ -267,6 +281,16 @@ def main():
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+                
+            # Save top images at regular intervals
+            if epoch % 500 == 0 or epoch == num_epochs - 1:
+                dir_name = f'./most_real_imgs/'
+                os.makedirs(dir_name, exist_ok=True)
+                for idx, (_, img) in enumerate(sorted(top_images, key=lambda x: x[0], reverse=True)):
+                    img_name = f'{idx}.png'
+                    image_to_save = np.transpose(img, (1, 2, 0))
+                    image_to_save = (image_to_save - np.min(image_to_save)) / (np.max(image_to_save) - np.min(image_to_save))
+                    plt.imsave(os.path.join(dir_name, img_name), image_to_save)
             
             # Save Losses for plotting later
             G_losses.append(errG.item())
