@@ -144,12 +144,15 @@ def segment_images(args, subdir_path, image_name, destination_folder):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("AutoSeg")
-    parser.add_argument("--isresize", type=bool, default=True, help="Specify if images should be resized to increase speed (output has original size again)")
+    parser.add_argument("--isresize", choices=['True', 'False'], default='True', help="Specify if images should be resized to increase speed (output has original size again)")
     parser.add_argument("--resize_factor", type=int, default=0.5, help="Resize Factor. Height and width of images is multiplied by this factor if isresize = True")
     parser.add_argument("--size_thresh", type=int, default=2000, help="Threshold of minimum image size. If image is bigger than this threshold, it will be resized.")
     parser.add_argument("--area_thresh_ratio", type=int, default=0.01, help="Ratio that defines the minimun area a mask must have to be recognized (area_tresh_ratio = min_mask_area/total_image_area).")
     args = parser.parse_args()
 
+    # Convert string to boolean (string is used for arg parsing)
+    args.isresize = args.isresize == 'True'
+    
     # Data path
     # Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
     root_folder = "./imgs/set_1"

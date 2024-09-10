@@ -41,6 +41,10 @@ $ git clone https://github.com/stefanherdy/use-segment-anything-model-to-autoseg
         Example usage:
         python sam.py --isresize True --resize_factor 0.5 --area_thresh_ratio 0.005
 
+        After segmenting the raw images using sam.py you can postprocess the data with postprocess.py
+        Specify your root folder and destination folder path and the segmented images get autocropped and the background is set to white.
+        
+
 The code in this repository was used for further analysis of microscope images of different species. The aim was to investigate how well Generative Adversarial Networks (GANs) can assist in species recognition.
 
 - gan.py and gan_128.py execute a Generative Adversarial Network to generate artificial images based on the selected images.
