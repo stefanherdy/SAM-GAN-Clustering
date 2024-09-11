@@ -17,7 +17,7 @@ import cv2
 import glob
 
 root_folder = "./imgs/cropped"
-destination_folder = "./imgs_checked"
+destination_folder = "./imgs/checked"
 if not os.path.exists(destination_folder):
     os.makedirs(destination_folder)
 
