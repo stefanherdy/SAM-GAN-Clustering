@@ -14,10 +14,14 @@ commands.txt
 sam_riccia.py
 gan_128_pretr.py
 __pycache__
-fake_imgs
 conf*
 riccia_imgs_cropped_*
-fake_imgs_*
+fake_imgs*
 riccia_imgs_selected_*
 records
 fake_tafeln
+training_plots
+most_real_imgs
+frozen_samples
+most_real_imgs*
+real_imgs_*

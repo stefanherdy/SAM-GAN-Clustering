@@ -20,7 +20,7 @@ import os
 import cv2
 import numpy as np
 import glob
-import skimage.measure
+import argparse
 
 def add_white_padding(image, padding_size=30):
     # Get the current image size
@@ -76,25 +76,14 @@ def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
                     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     _, (threshold) = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)   
                     threshold = keep_biggest_connected_mask(threshold)
-                    # cv2.imshow('image window', threshold)
-                    # # add wait key. window waits until user presses a key
-                    # cv2.waitKey(0)
-                    # # and finally destroy/close all open windows
-                    # cv2.destroyAllWindows()
-                    #threshold[labeled_image == True] = [255]
-                    # cv2.imshow('image window',threshold.astype(np.uint8)*255)
-                    # add wait key. window waits until user presses a key
-                    # cv2.waitKey(0)
-                    # and finally destroy/close all open windows
-                    # cv2.destroyAllWindows()
+                    
                     segmentation = np.where(threshold == True)
                     if len(segmentation[0]) > 0:
                         x_min = int(np.min(segmentation[1]))
                         x_max = int(np.max(segmentation[1]))
                         y_min = int(np.min(segmentation[0]))
                         y_max = int(np.max(segmentation[0]))
-                        #for i, contour in enumerate(contours):
-                        #    x, y, w, h = cv2.boundingRect(contour)
+
                         cropped = img[y_min:y_max, x_min:x_max]
                         cropped = add_white_padding(cropped)
                         output_path = os.path.join(output_subdir_path, file)
