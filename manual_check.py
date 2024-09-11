@@ -16,8 +16,10 @@ import os
 import cv2
 import glob
 
-root_folder = "path/to/your/folder/with/images"
-destination_folder = "path/to/your/destination/folder/with/images"
+root_folder = "./imgs_cropped"
+destination_folder = "./imgs_checked"
+if not os.path.exists(destination_folder):
+    os.makedirs(destination_folder)
 
 for subdir in os.listdir(root_folder):
     subdir_path = os.path.join(root_folder, subdir)
