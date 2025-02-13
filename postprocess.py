@@ -96,9 +96,9 @@ def crop_spores_in_directory(input_dir, output_dir, min_spore_area=500):
 if __name__ == "__main__":
     # Data path
     # Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
-    root_folder = "./imgs/segmented/"
+    root_folder = "./local/raw_imgs_segmented/"
     # Path to store the segmented images
-    destination_folder = "./imgs/cropped/"
+    destination_folder = "./local/raw_imgs_cropped/"
 
     if not os.path.isdir(destination_folder):
         os.makedirs(destination_folder)

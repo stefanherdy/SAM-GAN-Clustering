@@ -155,19 +155,19 @@ if __name__ == "__main__":
     
     # Data path
     # Select your own data path! To try the script there are some images stored under "./imgs/set_1/"
-    root_folder = "./imgs/raw"
+    root_folder = "./local/imgs/raw"
     # Path to store the segmented images
-    destination_folder = "./imgs/segmented"
+    destination_folder = "./local/raw_imgs_segmented"
 
     if not os.path.isdir(destination_folder):
         os.makedirs(destination_folder)
 
-    if not os.path.isdir('./model'):
-        os.makedirs('./model')
+    if not os.path.isdir('./local/model'):
+        os.makedirs('./local/model')
     
     # Model path
-    ckpt_vit_b = "./model/sam_vit_b_01ec64.pth"
-    ckpt_vit_h = "./model/sam_vit_h_4b8939.pth"
+    ckpt_vit_b = "./local/model/sam_vit_b_01ec64.pth"
+    ckpt_vit_h = "./local/model/sam_vit_h_4b8939.pth"
 
     # Init selected model. You can choose between vit_b and vit_h
     sam = sam_model_registry["vit_b"](checkpoint=ckpt_vit_b)

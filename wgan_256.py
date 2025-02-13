@@ -25,10 +25,10 @@ def main(name, perform_pretraining, mode):
     torch.use_deterministic_algorithms(True) 
 
     if  perform_pretraining == False:
-      dataroot = "./riccia_imgs_selected/" + mode + '/' + name
+      dataroot = "./local/raw_imgs_cropped/" + mode + '/' + name
       num_epochs = 2001
     else:
-      dataroot = "./riccia_imgs_selected/" + mode
+      dataroot = "./local/raw_imgs_cropped/" + mode
       num_epochs = 5001
 
     workers = 8
